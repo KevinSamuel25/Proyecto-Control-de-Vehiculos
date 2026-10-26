@@ -1,0 +1,178 @@
+{
+  "info": {
+    "_postman_id": "7c78ce4a-5da4-4f90-bd7f-vehiculos-mantenimientos",
+    "name": "Control de Vehiculos - Flota y Mantenimientos",
+    "description": "Endpoints de la gestion de flota y mantenimientos preventivos.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000/api"
+    },
+    {
+      "key": "vehiculoId",
+      "value": "1"
+    },
+    {
+      "key": "mantenimientoId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Vehiculos",
+      "item": [
+        {
+          "name": "Listar vehiculos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos/?page=1&estado=ACTIVO",
+              "host": ["{{baseUrl}}"],
+              "path": ["vehiculos", ""],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "estado", "value": "ACTIVO"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear vehiculo",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"placa\": \"ABC-123\",\n  \"marca\": \"Toyota\",\n  \"modelo\": \"Hilux\",\n  \"anio\": 2022,\n  \"kilometraje\": 10000,\n  \"estado\": \"ACTIVO\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos/",
+              "host": ["{{baseUrl}}"],
+              "path": ["vehiculos", ""]
+            }
+          }
+        },
+        {
+          "name": "Consultar vehiculo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos/{{vehiculoId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["vehiculos", "{{vehiculoId}}", ""]
+            }
+          }
+        },
+        {
+          "name": "Actualizar vehiculo",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kilometraje\": 10500,\n  \"estado\": \"EN_TALLER\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos/{{vehiculoId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["vehiculos", "{{vehiculoId}}", ""]
+            }
+          }
+        },
+        {
+          "name": "Eliminar vehiculo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos/{{vehiculoId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["vehiculos", "{{vehiculoId}}", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mantenimientos",
+      "item": [
+        {
+          "name": "Listar mantenimientos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mantenimientos/?page=1&vehiculo={{vehiculoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["mantenimientos", ""],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "vehiculo", "value": "{{vehiculoId}}"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Programar mantenimiento",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehiculo\": {{vehiculoId}},\n  \"descripcion\": \"Cambio de aceite\",\n  \"kilometraje_objetivo\": 15000,\n  \"fecha_programada\": \"2026-11-01\",\n  \"estado\": \"PENDIENTE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mantenimientos/",
+              "host": ["{{baseUrl}}"],
+              "path": ["mantenimientos", ""]
+            }
+          }
+        },
+        {
+          "name": "Consultar mantenimiento",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mantenimientos/{{mantenimientoId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["mantenimientos", "{{mantenimientoId}}", ""]
+            }
+          }
+        },
+        {
+          "name": "Actualizar mantenimiento",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"COMPLETADO\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mantenimientos/{{mantenimientoId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["mantenimientos", "{{mantenimientoId}}", ""]
+            }
+          }
+        },
+        {
+          "name": "Eliminar mantenimiento",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mantenimientos/{{mantenimientoId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["mantenimientos", "{{mantenimientoId}}", ""]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
