@@ -2,3 +2,5 @@ __init__.py
 .venv
 .idea
 .vscode
+Control_de_vehiculos/__pycache__/settings.cpython-312.pyc
+Control_de_vehiculos/__pycache__/__init__.cpython-312.pyc
