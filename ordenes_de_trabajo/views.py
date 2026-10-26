@@ -25,87 +25,19 @@ def respuesta_paginada(queryset, serializer_class, page_number):
     })
 
 # =====================================================================
-# VISTAS PARA EQUIPOS DE ARENA
-# =====================================================================
-
-@api_view(['GET', 'POST'])
-def equipos_api(request):
-    if request.method == 'GET':
-        equipos = EquipoArena.objects.order_by('codigo')
-        tipo = request.query_params.get('tipo')
-        activo = request.query_params.get('activo')
-        buscar = request.query_params.get('buscar')
-
-        if tipo:
-            equipos = equipos.filter(tipo__iexact=tipo)
-        if activo is not None:
-            if activo.lower() not in ['true', 'false']:
-                return Response(
-                    {'error': 'Utilice true o false.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            equipos = equipos.filter(activo=activo.lower() == 'true')
-        if buscar:
-            equipos = equipos.filter(nombre__icontains=buscar)
-
-        return respuesta_paginada(
-            equipos, EquipoArenaSerializer,
-            request.query_params.get('page', 1)
-        )
-
-    if not request.user.is_authenticated or not request.user.is_staff:
-        return Response({'error': 'Se requiere administrador.'}, status=403)
-
-    serializer = EquipoArenaSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
-def equipo_detalle_api(request, id):
-    try:
-        equipo = EquipoArena.objects.get(id=id)
-    except EquipoArena.DoesNotExist:
-        return Response({'error': 'Equipo no encontrado.'}, status=404)
-
-    if request.method == 'GET':
-        return Response(EquipoArenaSerializer(equipo).data)
-
-    if not request.user.is_authenticated or not request.user.is_staff:
-        return Response({'error': 'Se requiere administrador.'}, status=403)
-
-    if request.method in ['PUT', 'PATCH']:
-        serializer = EquipoArenaSerializer(
-            equipo, data=request.data,
-            partial=request.method == 'PATCH'
-        )
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=400)
-
-    equipo.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-# =====================================================================
 # VISTAS PARA ÓRDENES DE TRABAJO
 # =====================================================================
 
 @api_view(['GET', 'POST'])
 def ordenes_api(request):
     if request.method == 'GET':
-        ordenes = OrdenTrabajo.objects.order_by('-fecha_creacion')
+        ordenes = OrdenTrabajo.objects.order_by('-fecha_ingreso')
         estado = request.query_params.get('estado')
-        prioridad = request.query_params.get('prioridad')
         buscar = request.query_params.get('buscar')
 
         if estado:
             ordenes = ordenes.filter(estado__iexact=estado)
-        if prioridad:
-            ordenes = ordenes.filter(prioridad__iexact=prioridad)
+
         if buscar:
             ordenes = ordenes.filter(titulo__icontains=buscar)
 
@@ -158,7 +90,7 @@ def orden_detalle_api(request, id):
 @api_view(['GET', 'POST'])
 def comentarios_api(request):
     if request.method == 'GET':
-        comentarios = ComentarioOrden.objects.order_by('-fecha_creacion')
+        comentarios = ComentarioOrden.objects.order_by('-orden_trabajo__fecha_ingreso')
         orden_id = request.query_params.get('orden')
         
         if orden_id:

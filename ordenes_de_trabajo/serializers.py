@@ -1,60 +1,63 @@
 from rest_framework import serializers
-from .models import OrdenTrabajo, ComentarioOrden
+from .models import OrdenTrabajo, DetalleOrden, EstadoOrden
+
+
+class DetalleOrdenSerializer(serializers.ModelSerializer):
+    subtotal = serializers.ReadOnlyField()
+
+    class Meta:
+        model = DetalleOrden
+        fields = '__all__'
 
 
 class OrdenTrabajoSerializer(serializers.ModelSerializer):
-    equipo_nombre = serializers.CharField(source='equipo.nombre', read_only=True)
 
     class Meta:
         model = OrdenTrabajo
-        fields = [
-            'id', 
-            'titulo', 
-            'descripcion', 
-            'estado', 
-            'prioridad', 
-            'fecha_creacion', 
-            'fecha_actualizacion', 
-            'fecha_resolucion', 
-            'costo_estimado', 
-            'costo_real'
-        ]
+        fields = '__all__'
+
+    def validate_vehiculo(self, value):
+        # RN-03: No permitir crear/abrir si ya tiene una orden activa (ABIERTA o EN_PROCESO)
+        if not self.instance:  # Solo al crear una nueva orden
+            ordenes_activas = OrdenTrabajo.objects.filter(
+                vehiculo=value,
+                estado__in=[EstadoOrden.ABIERTA, EstadoOrden.EN_PROCESO]
+            ).exists()
+            
+            if ordenes_activas:
+                raise serializers.ValidationError(
+                    "El vehículo ya tiene una Orden de Trabajo activa (ABIERTA o EN_PROCESO)."
+                )
+        return value
+
+    def validate_notificaciones(self, attrs):
+        # RN-05: Impedir modificaciones si la orden está COMPLETADA o CANCELADA
+        if self.instance and self.instance.estado in [EstadoOrden.COMPLETADA, EstadoOrden.CANCELADA]:
+            raise serializers.ValidationError(
+                "No se puede modificar una orden que ya está COMPLETADA o CANCELADA."
+            )
+        return attrs
 
     def validate(self, data):
-
+        
         estado = data.get('estado', self.instance.estado if self.instance else None)
-        fecha_resolucion = data.get('fecha_resolucion', self.instance.fecha_resolucion if self.instance else None)
-        costo_estimado = data.get('costo_estimado', self.instance.costo_estimado if self.instance else 0)
-        costo_real = data.get('costo_real', self.instance.costo_real if self.instance else 0)
+        fecha_ingreso = data.get('fecha_ingreso', self.instance.fecha_ingreso if self.instance else None)
+        fecha_salida = data.get('fecha_salida', self.instance.fecha_salida if self.instance else None)
+        costo_total = data.get('costo_total', self.instance.costo_total if self.instance else None)
 
-        # 1. Validar que si está RESUELTA, tenga fecha de resolución
-        if estado == 'RESUELTA' and not fecha_resolucion:
+        if estado == 'RESUELTA' and not fecha_salida:
             raise serializers.ValidationError({
-                'fecha_resolucion': 'Debe especificar una fecha de resolución cuando el estado es Resuelta.'
+                'fecha_salida': 'Debe especificar una fecha de salida cuando el estado es Resuelta.'
             })
 
-        # 2. Validar que los costos no sean negativos
-        if costo_estimado is not None and costo_estimado < 0:
+        if fecha_salida and fecha_ingreso and fecha_salida < fecha_ingreso:
             raise serializers.ValidationError({
-                'costo_estimado': 'El costo estimado no puede ser un valor negativo.'
+                'fecha_salida': 'La fecha de salida no puede ser anterior a la fecha de ingreso.'
             })
 
-        if costo_real is not None and costo_real < 0:
+        if costo_total is not None and costo_total < 0:
             raise serializers.ValidationError({
-                'costo_real': 'El costo real no puede ser un valor negativo.'
+                'costo_total': 'El costo total no puede ser un valor negativo.'
             })
 
         return data
-
-
-class ComentarioOrdenSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = ComentarioOrden
-        fields = [
-            'id', 
-            'orden', 
-            'autor', 
-            'texto', 
-            'fecha_creacion'
-        ]
