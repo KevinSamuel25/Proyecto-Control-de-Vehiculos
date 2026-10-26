@@ -3,7 +3,7 @@ Proyecto Desarrollo problema de negocio
 
 ## API de flota y mantenimientos
 
-La API de Integrante 1 está disponible bajo `/api/`:
+La API bajo `/api/`:
 
 | Método | Endpoint | Descripción |
 |---|---|---|
