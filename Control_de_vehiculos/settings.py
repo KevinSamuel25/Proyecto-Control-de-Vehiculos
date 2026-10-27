@@ -39,7 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'vehiculos',
-    'mantenimientos',
+    'mantenimientos', #agregdos mv
+    'ordenes_de_trabajo',
+    'inventario',
+    'proveedores',
 ]
 
 MIDDLEWARE = [
