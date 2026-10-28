@@ -5,12 +5,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .models import EquipoArena, OrdenTrabajo, ComentarioOrden
-from .serializers import (
-    EquipoArenaSerializer,
-    OrdenTrabajoSerializer,
-    ComentarioOrdenSerializer
-)
+from .models import  OrdenTrabajo, ComentarioOrden
+from .serializers import OrdenTrabajoSerializer, ComentarioOrdenSerializer
 
 # Función para la paginación de los listados
 def respuesta_paginada(queryset, serializer_class, page_number):

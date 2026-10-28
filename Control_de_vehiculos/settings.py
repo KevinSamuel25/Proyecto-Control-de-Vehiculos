@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'vehiculos',
-    'mantenimientos', #agregdos mv
+    'mantenimientos', 
     'ordenes_de_trabajo',
     'inventario',
     'proveedores',
@@ -80,10 +80,23 @@ WSGI_APPLICATION = 'Control_de_vehiculos.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'control_vehiculos_db',
+        'USER': 'taller_user',
+        'PASSWORD': 'TallerVehiculos2026*',  
+        'HOST': 'localhost',
+        'PORT': '3306',
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
+
+        'DISABLE_SERVER_SIDE_CURSORS': True,
     }
+    
 }
+
+from django.db.backends.base.base import BaseDatabaseWrapper
+BaseDatabaseWrapper.check_database_version_supported = lambda self: None
 
 
 # Password validation

@@ -1,12 +1,12 @@
 from rest_framework import serializers
-from .models import OrdenTrabajo, DetalleOrden, EstadoOrden
+from .models import OrdenTrabajo, ComentarioOrden
 
 
-class DetalleOrdenSerializer(serializers.ModelSerializer):
+class ComentarioOrdenSerializer(serializers.ModelSerializer):
     subtotal = serializers.ReadOnlyField()
 
     class Meta:
-        model = DetalleOrden
+        model = ComentarioOrden
         fields = '__all__'
 
 
@@ -21,7 +21,7 @@ class OrdenTrabajoSerializer(serializers.ModelSerializer):
         if not self.instance:  # Solo al crear una nueva orden
             ordenes_activas = OrdenTrabajo.objects.filter(
                 vehiculo=value,
-                estado__in=[EstadoOrden.ABIERTA, EstadoOrden.EN_PROCESO]
+                estado__in=[OrdenTrabajo.ABIERTA, OrdenTrabajo.EN_PROCESO]
             ).exists()
             
             if ordenes_activas:
@@ -32,7 +32,7 @@ class OrdenTrabajoSerializer(serializers.ModelSerializer):
 
     def validate_notificaciones(self, attrs):
         # RN-05: Impedir modificaciones si la orden está COMPLETADA o CANCELADA
-        if self.instance and self.instance.estado in [EstadoOrden.COMPLETADA, EstadoOrden.CANCELADA]:
+        if self.instance and self.instance.estado in [OrdenTrabajo.COMPLETADA, OrdenTrabajo.CANCELADA]:
             raise serializers.ValidationError(
                 "No se puede modificar una orden que ya está COMPLETADA o CANCELADA."
             )

@@ -24,8 +24,10 @@ class OrdenTrabajo(models.Model):
     )
     mecanico = models.ForeignKey(
         User,
+        on_delete=models.PROTECT,
         null=True,
         blank=True,
+        related_name='ordenes_asignadas'
     )
     fecha_ingreso = models.DateTimeField(auto_now_add=True)
     fecha_salida = models.DateTimeField(null=True, blank=True)
