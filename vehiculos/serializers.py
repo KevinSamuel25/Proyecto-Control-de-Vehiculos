@@ -18,11 +18,11 @@ class VehiculoSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'creado_en']
 
-    def validate_placa(self, value):
-        return value.strip().upper()
+    def validate_placa(self, valor):
+        return valor.strip().upper()
 
-    def to_internal_value(self, data):
-        normalized_data = data.copy()
-        if 'placa' in normalized_data and normalized_data['placa'] is not None:
-            normalized_data['placa'] = normalized_data['placa'].strip().upper()
-        return super().to_internal_value(normalized_data)
+    def to_internal_value(self, datos):
+        datos_normalizados = datos.copy()
+        if 'placa' in datos_normalizados and datos_normalizados['placa'] is not None:
+            datos_normalizados['placa'] = datos_normalizados['placa'].strip().upper()
+        return super().to_internal_value(datos_normalizados)

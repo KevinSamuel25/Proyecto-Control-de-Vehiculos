@@ -17,6 +17,22 @@
     {
       "key": "mantenimientoId",
       "value": "1"
+    },
+    {
+      "key": "proveedorId",
+      "value": "1"
+    },
+    {
+      "key": "repuestoId",
+      "value": "1"
+    },
+    {
+      "key": "ordenId",
+      "value": "1"
+    },
+    {
+      "key": "token",
+      "value": ""
     }
   ],
   "item": [
@@ -170,6 +186,161 @@
               "host": ["{{baseUrl}}"],
               "path": ["mantenimientos", "{{mantenimientoId}}", ""]
             }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Autenticacion",
+      "item": [
+        {
+          "name": "Iniciar sesion",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\n  \"username\": \"operador\",\n  \"password\": \"Operador123*\"\n}"},
+            "url": {"raw": "{{baseUrl}}/auth/login/", "host": ["{{baseUrl}}"], "path": ["auth", "login", ""]}
+          }
+        },
+        {
+          "name": "Consultar perfil",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Token {{token}}"}],
+            "url": {"raw": "{{baseUrl}}/auth/perfil/", "host": ["{{baseUrl}}"], "path": ["auth", "perfil", ""]}
+          }
+        },
+        {
+          "name": "Cerrar sesion",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Token {{token}}"}],
+            "url": {"raw": "{{baseUrl}}/auth/logout/", "host": ["{{baseUrl}}"], "path": ["auth", "logout", ""]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Proveedores",
+      "item": [
+        {
+          "name": "Listar proveedores con busqueda",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Token {{token}}"}],
+            "url": {"raw": "{{baseUrl}}/proveedores/?buscar=Repuestos&page=1", "host": ["{{baseUrl}}"], "path": ["proveedores", ""]}
+          }
+        },
+        {
+          "name": "Crear proveedor",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Token {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\n  \"cedula_juridica\": \"310100123456\",\n  \"nombre\": \"Proveedor Demo\",\n  \"contacto\": \"demo@proveedor.test\"\n}"},
+            "url": {"raw": "{{baseUrl}}/proveedores/", "host": ["{{baseUrl}}"], "path": ["proveedores", ""]}
+          }
+        },
+        {
+          "name": "Consultar proveedor",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Token {{token}}"}],
+            "url": {"raw": "{{baseUrl}}/proveedores/{{proveedorId}}/", "host": ["{{baseUrl}}"], "path": ["proveedores", "{{proveedorId}}", ""]}
+          }
+        },
+        {
+          "name": "Actualizar proveedor",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Authorization", "value": "Token {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\n  \"contacto\": \"nuevo@proveedor.test\"\n}"},
+            "url": {"raw": "{{baseUrl}}/proveedores/{{proveedorId}}/", "host": ["{{baseUrl}}"], "path": ["proveedores", "{{proveedorId}}", ""]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inventario",
+      "item": [
+        {
+          "name": "Listar inventario filtrado y ordenado",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Token {{token}}"}],
+            "url": {"raw": "{{baseUrl}}/inventario/?buscar=filtro&bajo_stock=1&ordenar=-stock&page=1", "host": ["{{baseUrl}}"], "path": ["inventario", ""]}
+          }
+        },
+        {
+          "name": "Resumen de inventario",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Token {{token}}"}],
+            "url": {"raw": "{{baseUrl}}/inventario/resumen/", "host": ["{{baseUrl}}"], "path": ["inventario", "resumen", ""]}
+          }
+        },
+        {
+          "name": "Crear repuesto",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Token {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\n  \"nombre\": \"Filtro demo\",\n  \"codigo\": \"FIL-DEMO-01\",\n  \"stock\": 10,\n  \"stock_minimo\": 2,\n  \"precio_unitario\": \"4500.00\",\n  \"proveedor\": {{proveedorId}}\n}"},
+            "url": {"raw": "{{baseUrl}}/inventario/", "host": ["{{baseUrl}}"], "path": ["inventario", ""]}
+          }
+        },
+        {
+          "name": "Registrar consumo",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Token {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\n  \"orden\": {{ordenId}},\n  \"repuesto\": {{repuestoId}},\n  \"cantidad\": 1\n}"},
+            "url": {"raw": "{{baseUrl}}/inventario/consumos/", "host": ["{{baseUrl}}"], "path": ["inventario", "consumos", ""]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ordenes de trabajo",
+      "item": [
+        {
+          "name": "Listar ordenes con busqueda",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Token {{token}}"}],
+            "url": {"raw": "{{baseUrl}}/ordenes/?buscar=ruido&estado=ABIERTA&page=1", "host": ["{{baseUrl}}"], "path": ["ordenes", ""]}
+          }
+        },
+        {
+          "name": "Crear orden",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Token {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\n  \"vehiculo\": {{vehiculoId}},\n  \"descripcion_falla\": \"Ruido en frenos\",\n  \"estado\": \"ABIERTA\"\n}"},
+            "url": {"raw": "{{baseUrl}}/ordenes/", "host": ["{{baseUrl}}"], "path": ["ordenes", ""]}
+          }
+        },
+        {
+          "name": "Consultar orden",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Token {{token}}"}],
+            "url": {"raw": "{{baseUrl}}/ordenes/{{ordenId}}/", "host": ["{{baseUrl}}"], "path": ["ordenes", "{{ordenId}}", ""]}
+          }
+        },
+        {
+          "name": "Completar orden sin fecha (400 esperado)",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Authorization", "value": "Token {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\n  \"estado\": \"COMPLETADA\"\n}"},
+            "url": {"raw": "{{baseUrl}}/ordenes/{{ordenId}}/", "host": ["{{baseUrl}}"], "path": ["ordenes", "{{ordenId}}", ""]}
+          }
+        },
+        {
+          "name": "Listar comentarios de orden",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Token {{token}}"}],
+            "url": {"raw": "{{baseUrl}}/comentarios/?orden={{ordenId}}&page=1", "host": ["{{baseUrl}}"], "path": ["comentarios", ""]}
           }
         }
       ]

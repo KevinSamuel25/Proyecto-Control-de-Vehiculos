@@ -17,13 +17,13 @@ class ProveedorTests(APITestCase):
         self.client.force_authenticate(user=self.admin)
 
     def test_crear_proveedor(self):
-        response = self.client.post('/api/proveedores/', {
+        respuesta = self.client.post('/api/proveedores/', {
             'cedula_juridica': '3101123456',
             'nombre': 'Repuestos Costa Rica',
             'contacto': '88888888'
         })
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(respuesta.status_code, 201)
         self.assertEqual(Proveedor.objects.count(), 1)
 
     def test_no_eliminar_proveedor_con_repuestos(self):
@@ -42,8 +42,15 @@ class ProveedorTests(APITestCase):
             proveedor=proveedor
         )
 
-        response = self.client.delete(
+        respuesta = self.client.delete(
             f'/api/proveedores/{proveedor.id}/'
         )
 
-        self.assertEqual(response.status_code, 409)
+        self.assertEqual(respuesta.status_code, 409)
+
+
+class ProveedorPermisosTests(APITestCase):
+
+    def test_anonimo_no_accede_a_proveedores(self):
+        respuesta = self.client.get('/api/proveedores/')
+        self.assertEqual(respuesta.status_code, 401)

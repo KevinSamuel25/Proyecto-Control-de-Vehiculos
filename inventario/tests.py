@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from rest_framework.test import APITestCase
 
 from proveedores.models import Proveedor
@@ -50,7 +50,7 @@ class InventarioTests(APITestCase):
         )
 
     def test_crear_repuesto(self):
-        response = self.client.post('/api/inventario/', {
+        respuesta = self.client.post('/api/inventario/', {
             'nombre': 'Pastillas de freno',
             'codigo': 'FRE-02',
             'stock': 15,
@@ -59,31 +59,31 @@ class InventarioTests(APITestCase):
             'proveedor': self.proveedor.id
         })
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(respuesta.status_code, 201)
         self.assertEqual(Repuesto.objects.count(), 2)
 
     def test_filtrar_stock_bajo(self):
-        response = self.client.get(
+        respuesta = self.client.get(
             '/api/inventario/',
             {'bajo_stock': '1'}
         )
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['total_registros'], 0)
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.data['total_registros'], 0)
 
     def test_no_permitir_stock_negativo(self):
-        response = self.client.patch(
+        respuesta = self.client.patch(
             f'/api/inventario/{self.repuesto.id}/',
             {'stock': -5},
             format='json'
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(respuesta.status_code, 400)
 
     def test_descontar_stock(self):
         orden = self.crear_orden()
 
-        response = self.client.post(
+        respuesta = self.client.post(
             '/api/inventario/consumos/',
             {
                 'orden': orden.id,
@@ -93,7 +93,7 @@ class InventarioTests(APITestCase):
             format='json'
         )
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(respuesta.status_code, 201)
 
         self.repuesto.refresh_from_db()
         orden.refresh_from_db()
@@ -105,7 +105,7 @@ class InventarioTests(APITestCase):
     def test_stock_insuficiente(self):
         orden = self.crear_orden()
 
-        response = self.client.post(
+        respuesta = self.client.post(
             '/api/inventario/consumos/',
             {
                 'orden': orden.id,
@@ -115,7 +115,7 @@ class InventarioTests(APITestCase):
             format='json'
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(respuesta.status_code, 400)
 
         self.repuesto.refresh_from_db()
 
@@ -135,8 +135,42 @@ class InventarioTests(APITestCase):
             format='json'
         )
 
-        response = self.client.delete(
+        respuesta = self.client.delete(
             f'/api/inventario/{self.repuesto.id}/'
         )
 
-        self.assertEqual(response.status_code, 409)
+        self.assertEqual(respuesta.status_code, 409)
+
+
+class InventarioPermisosTests(APITestCase):
+
+    def setUp(self):
+        self.proveedor = Proveedor.objects.create(
+            cedula_juridica='3101987654',
+            nombre='Distribuidora',
+            contacto='88887777'
+        )
+
+    def test_anonimo_no_accede_al_inventario(self):
+        respuesta = self.client.get('/api/inventario/')
+        self.assertEqual(respuesta.status_code, 401)
+
+    def test_rol_consulta_no_puede_crear_repuesto(self):
+        grupo, _ = Group.objects.get_or_create(name='Consulta')
+        consulta = User.objects.create_user(
+            username='consulta_inv',
+            password='prueba12345',
+        )
+        consulta.groups.add(grupo)
+        self.client.force_authenticate(user=consulta)
+
+        respuesta = self.client.post('/api/inventario/', {
+            'nombre': 'Bateria',
+            'codigo': 'BAT-01',
+            'stock': 4,
+            'stock_minimo': 1,
+            'precio_unitario': '45000.00',
+            'proveedor': self.proveedor.id,
+        })
+
+        self.assertEqual(respuesta.status_code, 403)

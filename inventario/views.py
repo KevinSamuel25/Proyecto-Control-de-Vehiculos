@@ -6,37 +6,22 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from Control_de_vehiculos.seguridad import requiere_admin, requiere_operador
 from .models import Repuesto
 from .serializers import RepuestoSerializer, ConsumoRepuestoSerializer
 from .servicios import registrar_consumo
 
 
-def verificar_admin(request):
-    if not request.user.is_authenticated:
-        return Response(
-            {'error': 'Autenticacion requerida.'},
-            status=status.HTTP_401_UNAUTHORIZED
-        )
-
-    if not request.user.is_staff:
-        return Response(
-            {'error': 'Se requiere administrador.'},
-            status=status.HTTP_403_FORBIDDEN
-        )
-
-    return None
-
-
 @api_view(['GET', 'POST'])
-def inventario_api(request):
+def inventario_api(peticion):
 
-    if request.method == 'GET':
+    if peticion.method == 'GET':
         repuestos = Repuesto.objects.select_related('proveedor').order_by('id')
 
-        buscar = request.query_params.get('buscar')
-        proveedor = request.query_params.get('proveedor')
-        bajo_stock = request.query_params.get('bajo_stock')
-        ordenar = request.query_params.get('ordenar', 'id')
+        buscar = peticion.query_params.get('buscar')
+        proveedor = peticion.query_params.get('proveedor')
+        bajo_stock = peticion.query_params.get('bajo_stock')
+        ordenar = peticion.query_params.get('ordenar', 'id')
 
         if buscar:
             repuestos = repuestos.filter(
@@ -77,39 +62,39 @@ def inventario_api(request):
 
         repuestos = repuestos.order_by(ordenar)
 
-        paginator = Paginator(repuestos, 5)
-        pagina = paginator.get_page(request.query_params.get('page', 1))
+        paginador = Paginator(repuestos, 5)
+        pagina = paginador.get_page(peticion.query_params.get('page', 1))
 
-        serializer = RepuestoSerializer(pagina.object_list, many=True)
+        serializador = RepuestoSerializer(pagina.object_list, many=True)
 
         return Response({
             'pagina_actual': pagina.number,
-            'total_paginas': paginator.num_pages,
-            'total_registros': paginator.count,
-            'resultados': serializer.data
+            'total_paginas': paginador.num_pages,
+            'total_registros': pagina.paginator.count,
+            'resultados': serializador.data
         })
 
-    error = verificar_admin(request)
+    error = requiere_admin(peticion)
     if error is not None:
         return error
 
-    serializer = RepuestoSerializer(data=request.data)
+    serializador = RepuestoSerializer(data=peticion.data)
 
-    if serializer.is_valid():
-        serializer.save()
+    if serializador.is_valid():
+        serializador.save()
         return Response(
-            serializer.data,
+            serializador.data,
             status=status.HTTP_201_CREATED
         )
 
     return Response(
-        serializer.errors,
+        serializador.errors,
         status=status.HTTP_400_BAD_REQUEST
     )
 
 
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
-def repuesto_detalle_api(request, pk):
+def repuesto_detalle_api(peticion, pk):
 
     try:
         repuesto = Repuesto.objects.get(pk=pk)
@@ -119,32 +104,32 @@ def repuesto_detalle_api(request, pk):
             status=status.HTTP_404_NOT_FOUND
         )
 
-    if request.method == 'GET':
-        serializer = RepuestoSerializer(repuesto)
-        return Response(serializer.data)
+    if peticion.method == 'GET':
+        serializador = RepuestoSerializer(repuesto)
+        return Response(serializador.data)
 
-    error = verificar_admin(request)
+    error = requiere_admin(peticion)
     if error is not None:
         return error
 
-    if request.method in ['PUT', 'PATCH']:
+    if peticion.method in ['PUT', 'PATCH']:
 
-        serializer = RepuestoSerializer(
+        serializador = RepuestoSerializer(
             repuesto,
-            data=request.data,
-            partial=request.method == 'PATCH'
+            data=peticion.data,
+            partial=peticion.method == 'PATCH'
         )
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
+        if serializador.is_valid():
+            serializador.save()
+            return Response(serializador.data)
 
         return Response(
-            serializer.errors,
+            serializador.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    if request.method == 'DELETE':
+    if peticion.method == 'DELETE':
         try:
             repuesto.delete()
             return Response(
@@ -159,7 +144,7 @@ def repuesto_detalle_api(request, pk):
 
 
 @api_view(['GET'])
-def resumen_inventario_api(request):
+def resumen_inventario_api(peticion):
 
     resumen = Repuesto.objects.aggregate(
         total_tipos=Count('id'),
@@ -178,24 +163,24 @@ def resumen_inventario_api(request):
 
 
 @api_view(['POST'])
-def consumo_repuesto_api(request):
+def consumo_repuesto_api(peticion):
 
-    error = verificar_admin(request)
+    error = requiere_operador(peticion)
     if error is not None:
         return error
 
-    serializer = ConsumoRepuestoSerializer(data=request.data)
+    serializador = ConsumoRepuestoSerializer(data=peticion.data)
 
-    if not serializer.is_valid():
+    if not serializador.is_valid():
         return Response(
-            serializer.errors,
+            serializador.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
 
     detalle = registrar_consumo(
-        orden_id=serializer.validated_data['orden'],
-        repuesto_id=serializer.validated_data['repuesto'],
-        cantidad=serializer.validated_data['cantidad']
+        orden_id=serializador.validated_data['orden'],
+        repuesto_id=serializador.validated_data['repuesto'],
+        cantidad=serializador.validated_data['cantidad']
     )
 
     return Response({

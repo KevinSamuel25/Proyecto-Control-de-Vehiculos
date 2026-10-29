@@ -2,5 +2,21 @@ __init__.py
 .venv
 .idea
 .vscode
-Control_de_vehiculos/__pycache__/settings.cpython-312.pyc
-Control_de_vehiculos/__pycache__/__init__.cpython-312.pyc
+
+# Variables de entorno y secretos: nunca subir al repositorio.
+.env
+*.pem
+
+# Bases de datos locales y datos de desarrollo.
+db.sqlite3
+*.sqlite3
+
+# Caché de Python.
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Logs y archivos temporales.
+*.log
+*.tmp
+.DS_Store

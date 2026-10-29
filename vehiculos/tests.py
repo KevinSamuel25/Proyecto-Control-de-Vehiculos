@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -12,6 +12,13 @@ class VehiculoAPITests(APITestCase):
             email='admin@example.com',
             password='password123',
         )
+        grupo_operador, _ = Group.objects.get_or_create(name='Operador')
+        self.operador = User.objects.create_user(
+            username='operador',
+            password='password123',
+        )
+        self.operador.groups.add(grupo_operador)
+
         self.url = '/api/vehiculos/'
         self.vehiculo = Vehiculo.objects.create(
             placa='ABC-123',
@@ -22,14 +29,20 @@ class VehiculoAPITests(APITestCase):
         )
 
     def test_listado_paginado_y_filtrado_por_estado(self):
-        response = self.client.get(self.url, {'estado': 'ACTIVO'})
+        self.client.force_authenticate(self.operador)
+        respuesta = self.client.get(self.url, {'estado': 'ACTIVO'})
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['total_registros'], 1)
-        self.assertEqual(response.data['resultados'][0]['placa'], 'ABC-123')
+        self.assertEqual(respuesta.status_code, status.HTTP_200_OK)
+        self.assertEqual(respuesta.data['total_registros'], 1)
+        self.assertEqual(respuesta.data['resultados'][0]['placa'], 'ABC-123')
+        self.assertIn('total_paginas', respuesta.data)
+
+    def test_anonimo_recibe_401(self):
+        respuesta = self.client.get(self.url)
+        self.assertEqual(respuesta.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_crear_vehiculo_requiere_administrador(self):
-        data = {
+        datos = {
             'placa': 'xyz-789',
             'marca': 'Nissan',
             'modelo': 'Frontier',
@@ -37,17 +50,18 @@ class VehiculoAPITests(APITestCase):
             'kilometraje': 0,
         }
 
-        response = self.client.post(self.url, data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.client.force_authenticate(self.operador)
+        respuesta = self.client.post(self.url, datos)
+        self.assertEqual(respuesta.status_code, status.HTTP_403_FORBIDDEN)
 
         self.client.force_authenticate(self.admin)
-        response = self.client.post(self.url, data)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['placa'], 'XYZ-789')
+        respuesta = self.client.post(self.url, datos)
+        self.assertEqual(respuesta.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(respuesta.data['placa'], 'XYZ-789')
 
     def test_placa_invalida_es_rechazada(self):
         self.client.force_authenticate(self.admin)
-        response = self.client.post(self.url, {
+        respuesta = self.client.post(self.url, {
             'placa': 'placa invalida',
             'marca': 'Ford',
             'modelo': 'Ranger',
@@ -55,5 +69,18 @@ class VehiculoAPITests(APITestCase):
             'kilometraje': 100,
         })
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('placa', response.data)
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('placa', respuesta.data)
+
+    def test_placa_duplicada_es_rechazada(self):
+        self.client.force_authenticate(self.admin)
+        respuesta = self.client.post(self.url, {
+            'placa': 'ABC-123',
+            'marca': 'Toyota',
+            'modelo': 'Hilux',
+            'anio': 2022,
+            'kilometraje': 0,
+        })
+
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('placa', respuesta.data)

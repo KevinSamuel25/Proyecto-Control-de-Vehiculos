@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Mantenimiento
 
+
 class MantenimientoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Mantenimiento
@@ -15,9 +16,9 @@ class MantenimientoSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'creado_en']
 
-    def validate(self, attrs):
-        vehiculo = attrs.get('vehiculo', self.instance.vehiculo if self.instance else None)
-        km_objetivo = attrs.get(
+    def validate(self, atributos):
+        vehiculo = atributos.get('vehiculo', self.instance.vehiculo if self.instance else None)
+        km_objetivo = atributos.get(
             'kilometraje_objetivo',
             self.instance.kilometraje_objetivo if self.instance else None,
         )
@@ -27,4 +28,4 @@ class MantenimientoSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({
                     "kilometraje_objetivo": f"El kilometraje ({km_objetivo} km) debe ser mayor al actual del vehículo ({vehiculo.kilometraje} km)."
                 })
-        return attrs
+        return atributos
