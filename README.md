@@ -1,3 +1,9 @@
+# Participantes:
+
+Daniel Rojas Portillo C5J232
+Malcolm Méndez C4H192
+Yariel Jiménez C4G183
+
 # Proyecto-Control-de-Vehiculos
 
 API REST con Django y Django REST Framework para la gestión de una flota
